@@ -12,13 +12,38 @@
         <h1>Tango Puzzle</h1>
         <div class="game-controls">
             <button id="new-game-btn">New Game</button>
+            <button id="check-btn">Check</button>
+            <button id="help-btn">Help</button>
         </div>
-        <div class="game-board" id="game-board">
-            {% for row in range(board_size) %}
+        <div class="game-board-container">
+            <!-- Column helpers -->
+            <div class="column-helpers">
                 {% for col in range(board_size) %}
-                    <div class="cell" data-row="{{ row }}" data-col="{{ col }}"></div>
+                <div class="helper-cell column-helper" data-col="{{ col }}">
+                    <div class="sun-count">0</div>
+                    <div class="moon-count">0</div>
+                </div>
                 {% endfor %}
-            {% endfor %}
+            </div>
+            
+            <!-- Row helpers -->
+            <div class="row-helpers">
+                {% for row in range(board_size) %}
+                <div class="helper-cell row-helper" data-row="{{ row }}">
+                    <div class="sun-count">0</div>
+                    <div class="moon-count">0</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Game board -->
+            <div class="game-board" id="game-board">
+                {% for row in range(board_size) %}
+                    {% for col in range(board_size) %}
+                        <div class="cell" data-row="{{ row }}" data-col="{{ col }}"></div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
         </div>
         <div class="game-info">
             <p>Rules:</p>

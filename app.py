@@ -1,16 +1,18 @@
 from flask import Flask, render_template, jsonify, request
 import random
+import copy
 
 app = Flask(__name__)
 
-# Game board size (8x8)
+# Fixed board size
 BOARD_SIZE = 8
+MAX_SYMBOLS = 4  # Maximum number of suns or moons per row/column
 
 def create_empty_board():
-    return [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+    return [['' for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
 def is_valid_move(board, row, col, value):
-    if value is None:
+    if value == '':
         return True
         
     # Check if the move would create three in a row horizontally
@@ -54,25 +56,25 @@ def is_col_valid(board, col):
     return suns <= BOARD_SIZE//2 and moons <= BOARD_SIZE//2
 
 def are_rows_unique(board):
-    filled_rows = [row for row in board if None not in row]
+    filled_rows = [row for row in board if '' not in row]
     return len(filled_rows) == len(set(tuple(row) for row in filled_rows))
 
 def are_cols_unique(board):
     filled_cols = []
     for col in range(BOARD_SIZE):
         col_values = [board[row][col] for row in range(BOARD_SIZE)]
-        if None not in col_values:
+        if '' not in col_values:
             filled_cols.append(tuple(col_values))
     return len(filled_cols) == len(set(filled_cols))
 
 def count_empty_cells(board):
-    return sum(1 for row in board for cell in row if cell is None)
+    return sum(1 for row in board for cell in row if cell == '')
 
 def is_board_valid(board):
     # Check if any row or column has more than two identical symbols adjacent
     for row in range(BOARD_SIZE):
         for col in range(BOARD_SIZE):
-            if board[row][col] is not None and not is_valid_move(board, row, col, board[row][col]):
+            if board[row][col] != '' and not is_valid_move(board, row, col, board[row][col]):
                 return False
     
     # Check if rows and columns have equal numbers of suns and moons
@@ -86,65 +88,118 @@ def is_board_valid(board):
     
     return True
 
-def generate_puzzle():
-    max_attempts = 2000
-    attempts = 0
+def find_empty_cell(board):
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            if board[row][col] == '':
+                return row, col
+    return None
+
+def solve_puzzle(board):
+    """Solve the puzzle using backtracking."""
+    empty = find_empty_cell(board)
+    if not empty:
+        return True  # Puzzle is solved
     
-    while attempts < max_attempts:
-        board = create_empty_board()
-        symbols = ['sun', 'moon']
+    row, col = empty
+    for value in ['sun', 'moon']:
+        if is_valid_move(board, row, col, value):
+            board[row][col] = value
+            
+            if is_board_valid(board) and solve_puzzle(board):
+                return True
+            
+            board[row][col] = ''
+    
+    return False
+
+def count_solutions(board):
+    """Count the number of solutions for the puzzle."""
+    solutions = 0
+    
+    def count_solutions_recursive(board):
+        nonlocal solutions
+        empty = find_empty_cell(board)
+        if not empty:
+            solutions += 1
+            return
         
-        # First, fill the board with a valid pattern
-        for row in range(BOARD_SIZE):
-            for col in range(BOARD_SIZE):
-                valid_symbols = [s for s in symbols if is_valid_move(board, row, col, s)]
-                if valid_symbols:
-                    board[row][col] = random.choice(valid_symbols)
-                else:
-                    # If no valid symbol can be placed, start over
-                    break
-            else:
-                continue
-            break
+        row, col = empty
+        for value in ['sun', 'moon']:
+            if is_valid_move(board, row, col, value):
+                board[row][col] = value
+                if is_board_valid(board):
+                    count_solutions_recursive(board)
+                board[row][col] = ''
+    
+    count_solutions_recursive(copy.deepcopy(board))
+    return solutions
+
+def generate_complete_solution():
+    """Generate a complete, valid solution."""
+    board = create_empty_board()
+    if solve_puzzle(board):
+        return board
+    return None
+
+def generate_puzzle():
+    board = create_empty_board()
+    initial_board = create_empty_board()
+    
+    # Calculate target number of initial cells (around 25-30% of the board)
+    target_cells = int(BOARD_SIZE * BOARD_SIZE * random.uniform(0.25, 0.3))
+    placed_cells = 0
+    
+    # Try to place symbols
+    attempts = 0
+    max_attempts = 1000
+    
+    while placed_cells < target_cells and attempts < max_attempts:
+        row = random.randint(0, BOARD_SIZE - 1)
+        col = random.randint(0, BOARD_SIZE - 1)
         
-        # Verify the board is valid
-        if is_board_valid(board):
-            # Remove cells to create the puzzle
-            # For 8x8, we want to remove between 32 and 40 cells (50-62.5% empty)
-            min_empty = BOARD_SIZE * 4  # 32 cells
-            max_empty = BOARD_SIZE * 5  # 40 cells
-            cells_to_remove = random.randint(min_empty, max_empty)
-            
-            # Create a list of all cell positions
-            positions = [(row, col) for row in range(BOARD_SIZE) for col in range(BOARD_SIZE)]
-            random.shuffle(positions)
-            
-            # Remove cells while maintaining puzzle validity
-            for row, col in positions[:cells_to_remove]:
-                board[row][col] = None
-            
-            # Verify we have enough empty cells
-            if count_empty_cells(board) >= min_empty:
-                return board
+        if board[row][col] == '':
+            symbol = random.choice(['sun', 'moon'])
+            if is_valid_move(board, row, col, symbol):
+                board[row][col] = symbol
+                initial_board[row][col] = symbol
+                placed_cells += 1
         
         attempts += 1
     
-    # If we couldn't generate a valid puzzle, create a simple one with some pre-filled cells
-    board = create_empty_board()
-    # Add some initial cells in a valid pattern
-    for row in range(0, BOARD_SIZE, 2):
-        for col in range(0, BOARD_SIZE, 2):
-            board[row][col] = 'sun' if (row + col) % 4 == 0 else 'moon'
-    return board
+    return board, initial_board
 
 @app.route('/')
 def index():
     return render_template('index.html', board_size=BOARD_SIZE)
 
-@app.route('/api/new-game')
+@app.route('/api/new-game', methods=['GET'])
 def new_game():
-    board = generate_puzzle()
-    return jsonify({'board': board})
+    board, initial_board = generate_puzzle()
+    return jsonify({
+        'board': board,
+        'initial_board': initial_board
+    })
+
+@app.route('/api/check', methods=['POST'])
+def check_board():
+    data = request.get_json()
+    board = data.get('board', [])
+    initial_board = data.get('initial_board', [])
+    
+    errors = check_board_state(board, initial_board)
+    return jsonify({
+        'errors': errors
+    })
+
+@app.route('/api/help', methods=['POST'])
+def get_help():
+    data = request.get_json()
+    board = data.get('board', [])
+    initial_board = data.get('initial_board', [])
+    
+    solution = find_help_solution(board, initial_board)
+    return jsonify(solution)
 
 @app.route('/api/make-move', methods=['POST'])
 def make_move():
@@ -156,6 +211,138 @@ def make_move():
     # TODO: Implement move validation and board update logic
     
     return jsonify({'success': True})
+
+def check_board_state(board, initial_board):
+    errors = []
+    
+    # Check each cell
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            # Skip initial cells
+            if initial_board[row][col] != '':
+                continue
+                
+            cell = board[row][col]
+            if cell == '':  # Skip empty cells
+                continue
+                
+            # Check for three in a row horizontally
+            if col >= 2:
+                if board[row][col-1] == cell and board[row][col-2] == cell:
+                    errors.append((row, col, "Three identical symbols in a row"))
+            if col <= BOARD_SIZE-3:
+                if board[row][col+1] == cell and board[row][col+2] == cell:
+                    errors.append((row, col, "Three identical symbols in a row"))
+            if 0 < col < BOARD_SIZE-1:
+                if board[row][col-1] == cell and board[row][col+1] == cell:
+                    errors.append((row, col, "Three identical symbols in a row"))
+            
+            # Check for three in a row vertically
+            if row >= 2:
+                if board[row-1][col] == cell and board[row-2][col] == cell:
+                    errors.append((row, col, "Three identical symbols in a column"))
+            if row <= BOARD_SIZE-3:
+                if board[row+1][col] == cell and board[row+2][col] == cell:
+                    errors.append((row, col, "Three identical symbols in a column"))
+            if 0 < row < BOARD_SIZE-1:
+                if board[row-1][col] == cell and board[row+1][col] == cell:
+                    errors.append((row, col, "Three identical symbols in a column"))
+    
+    # Check row and column counts
+    for i in range(BOARD_SIZE):
+        # Check row counts
+        suns_in_row = count_symbols_in_row(board, i, 'sun')
+        moons_in_row = count_symbols_in_row(board, i, 'moon')
+        if suns_in_row > BOARD_SIZE//2:
+            errors.append((i, 0, f"Too many suns in row {i+1}"))
+        if moons_in_row > BOARD_SIZE//2:
+            errors.append((i, 0, f"Too many moons in row {i+1}"))
+        
+        # Check column counts
+        suns_in_col = count_symbols_in_col(board, i, 'sun')
+        moons_in_col = count_symbols_in_col(board, i, 'moon')
+        if suns_in_col > BOARD_SIZE//2:
+            errors.append((0, i, f"Too many suns in column {i+1}"))
+        if moons_in_col > BOARD_SIZE//2:
+            errors.append((0, i, f"Too many moons in column {i+1}"))
+    
+    # Check for duplicate rows
+    filled_rows = []
+    for row in range(BOARD_SIZE):
+        if '' not in board[row]:  # Only check complete rows
+            row_tuple = tuple(board[row])
+            if row_tuple in filled_rows:
+                errors.append((row, 0, f"Row {row+1} is identical to another row"))
+            filled_rows.append(row_tuple)
+    
+    # Check for duplicate columns
+    filled_cols = []
+    for col in range(BOARD_SIZE):
+        col_values = [board[row][col] for row in range(BOARD_SIZE)]
+        if '' not in col_values:  # Only check complete columns
+            col_tuple = tuple(col_values)
+            if col_tuple in filled_cols:
+                errors.append((0, col, f"Column {col+1} is identical to another column"))
+            filled_cols.append(col_tuple)
+    
+    return errors
+
+def find_help_solution(board, initial_board):
+    # First check for errors
+    errors = check_board_state(board, initial_board)
+    if errors:
+        return {
+            'type': 'error',
+            'errors': errors
+        }
+    
+    # If no errors, find a cell that can be solved
+    for row in range(BOARD_SIZE):
+        for col in range(BOARD_SIZE):
+            if initial_board[row][col] != '' or board[row][col] != '':
+                continue  # Skip initial and filled cells
+            
+            # Try placing a sun
+            if is_valid_move(board, row, col, 'sun'):
+                # Check if this would create any errors
+                board[row][col] = 'sun'
+                if not check_board_state(board, initial_board):
+                    board[row][col] = ''  # Reset the cell
+                    return {
+                        'type': 'hint',
+                        'row': row,
+                        'col': col,
+                        'symbol': 'sun',
+                        'reason': 'This cell can be filled with a sun as it follows all game rules'
+                    }
+                board[row][col] = ''  # Reset the cell
+            
+            # Try placing a moon
+            if is_valid_move(board, row, col, 'moon'):
+                # Check if this would create any errors
+                board[row][col] = 'moon'
+                if not check_board_state(board, initial_board):
+                    board[row][col] = ''  # Reset the cell
+                    return {
+                        'type': 'hint',
+                        'row': row,
+                        'col': col,
+                        'symbol': 'moon',
+                        'reason': 'This cell can be filled with a moon as it follows all game rules'
+                    }
+                board[row][col] = ''  # Reset the cell
+    
+    # If we get here, either the puzzle is complete or we couldn't find a valid move
+    if all(cell != '' for row in board for cell in row):
+        return {
+            'type': 'complete',
+            'message': 'Congratulations! The puzzle is complete!'
+        }
+    else:
+        return {
+            'type': 'error',
+            'errors': [(0, 0, "No valid moves found. Try removing some symbols and try again.")]
+        }
 
 if __name__ == '__main__':
     app.run(debug=True) 
