@@ -1,6 +1,49 @@
-# Tango Puzzle Game
+# Tango Game
 
-A web-based implementation of the Tango (Binairo) puzzle game using Flask. The game features a modern, user-friendly interface with sun and moon symbols instead of traditional 1s and 0s.
+⚠️ **AI-Generated Project** ⚠️
+
+This project was generated using AI assistance and is currently in a non-functional state. The codebase contains several issues that need to be addressed:
+
+## Current Issues
+- Grid layout is not displaying correctly
+- Game mechanics are not fully implemented
+- UI components need significant refinement
+- Core game logic requires debugging
+
+## Project Structure
+```
+tango-game/
+├── app.py              # Flask backend
+├── static/
+│   ├── game.js         # Game logic
+│   └── style.css       # Styling
+└── templates/
+    └── index.html      # Main game interface
+```
+
+## Development Status
+This project was created as an experiment in AI-assisted development. While the basic structure is in place, it requires significant work to become a functional game. The current implementation includes:
+
+- Basic Flask server setup
+- Incomplete game board implementation
+- Partial UI styling
+- Unfinished game mechanics
+
+## Next Steps
+To make this project functional, the following would need to be addressed:
+
+1. Fix grid layout and rendering
+2. Implement proper game mechanics
+3. Debug core game logic
+4. Refine UI/UX
+5. Add proper error handling
+6. Implement missing features
+
+## Note
+This project serves as a demonstration of AI-assisted development and highlights both the potential and limitations of current AI code generation tools. It should not be considered a production-ready application.
+
+## License
+MIT License - Feel free to use this as a learning resource or starting point for your own implementation.
 
 ## Game Rules
 

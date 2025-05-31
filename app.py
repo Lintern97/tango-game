@@ -4,25 +4,47 @@ import copy
 
 app = Flask(__name__)
 
-# Fixed board size
-BOARD_SIZE = 8
-MAX_SYMBOLS = 4  # Maximum number of suns or moons per row/column
+# Difficulty levels
+DIFFICULTY_EASY = {
+    'size': 6,
+    'min_fill': 0.30,
+    'max_fill': 0.35
+}
+DIFFICULTY_MEDIUM = {
+    'size': 8,
+    'min_fill': 0.25,
+    'max_fill': 0.30
+}
+DIFFICULTY_HARD = {
+    'size': 10,
+    'min_fill': 0.20,
+    'max_fill': 0.25
+}
 
-def create_empty_board():
-    return [['' for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+def get_board_size(difficulty='medium'):
+    difficulty_settings = {
+        'easy': DIFFICULTY_EASY,
+        'medium': DIFFICULTY_MEDIUM,
+        'hard': DIFFICULTY_HARD
+    }.get(difficulty.lower(), DIFFICULTY_MEDIUM)
+    return difficulty_settings['size']
+
+def create_empty_board(size):
+    return [['' for _ in range(size)] for _ in range(size)]
 
 def is_valid_move(board, row, col, value):
     if value == '':
         return True
         
+    board_size = len(board)
     # Check if the move would create three in a row horizontally
     if col >= 2:
         if board[row][col-1] == value and board[row][col-2] == value:
             return False
-    if col <= BOARD_SIZE-3:
+    if col <= board_size-3:
         if board[row][col+1] == value and board[row][col+2] == value:
             return False
-    if 0 < col < BOARD_SIZE-1:
+    if 0 < col < board_size-1:
         if board[row][col-1] == value and board[row][col+1] == value:
             return False
 
@@ -30,10 +52,10 @@ def is_valid_move(board, row, col, value):
     if row >= 2:
         if board[row-1][col] == value and board[row-2][col] == value:
             return False
-    if row <= BOARD_SIZE-3:
+    if row <= board_size-3:
         if board[row+1][col] == value and board[row+2][col] == value:
             return False
-    if 0 < row < BOARD_SIZE-1:
+    if 0 < row < board_size-1:
         if board[row-1][col] == value and board[row+1][col] == value:
             return False
 
@@ -46,23 +68,26 @@ def count_symbols_in_col(board, col, symbol):
     return sum(1 for row in board if row[col] == symbol)
 
 def is_row_valid(board, row):
+    board_size = len(board)
     suns = count_symbols_in_row(board, row, 'sun')
     moons = count_symbols_in_row(board, row, 'moon')
-    return suns <= BOARD_SIZE//2 and moons <= BOARD_SIZE//2
+    return suns <= board_size//2 and moons <= board_size//2
 
 def is_col_valid(board, col):
+    board_size = len(board)
     suns = count_symbols_in_col(board, col, 'sun')
     moons = count_symbols_in_col(board, col, 'moon')
-    return suns <= BOARD_SIZE//2 and moons <= BOARD_SIZE//2
+    return suns <= board_size//2 and moons <= board_size//2
 
 def are_rows_unique(board):
     filled_rows = [row for row in board if '' not in row]
     return len(filled_rows) == len(set(tuple(row) for row in filled_rows))
 
 def are_cols_unique(board):
+    board_size = len(board)
     filled_cols = []
-    for col in range(BOARD_SIZE):
-        col_values = [board[row][col] for row in range(BOARD_SIZE)]
+    for col in range(board_size):
+        col_values = [board[row][col] for row in range(board_size)]
         if '' not in col_values:
             filled_cols.append(tuple(col_values))
     return len(filled_cols) == len(set(filled_cols))
@@ -71,14 +96,15 @@ def count_empty_cells(board):
     return sum(1 for row in board for cell in row if cell == '')
 
 def is_board_valid(board):
+    board_size = len(board)
     # Check if any row or column has more than two identical symbols adjacent
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
+    for row in range(board_size):
+        for col in range(board_size):
             if board[row][col] != '' and not is_valid_move(board, row, col, board[row][col]):
                 return False
     
     # Check if rows and columns have equal numbers of suns and moons
-    for i in range(BOARD_SIZE):
+    for i in range(board_size):
         if not is_row_valid(board, i) or not is_col_valid(board, i):
             return False
     
@@ -89,8 +115,9 @@ def is_board_valid(board):
     return True
 
 def find_empty_cell(board):
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
+    board_size = len(board)
+    for row in range(board_size):
+        for col in range(board_size):
             if board[row][col] == '':
                 return row, col
     return None
@@ -135,19 +162,31 @@ def count_solutions(board):
     count_solutions_recursive(copy.deepcopy(board))
     return solutions
 
-def generate_complete_solution():
+def generate_complete_solution(size):
     """Generate a complete, valid solution."""
-    board = create_empty_board()
+    board = create_empty_board(size)
     if solve_puzzle(board):
         return board
     return None
 
-def generate_puzzle():
-    board = create_empty_board()
-    initial_board = create_empty_board()
+def generate_puzzle(difficulty='medium'):
+    # Get board size based on difficulty
+    board_size = get_board_size(difficulty)
+    board = create_empty_board(board_size)
+    initial_board = create_empty_board(board_size)
     
-    # Calculate target number of initial cells (around 25-30% of the board)
-    target_cells = int(BOARD_SIZE * BOARD_SIZE * random.uniform(0.25, 0.3))
+    # Select difficulty settings
+    difficulty_settings = {
+        'easy': DIFFICULTY_EASY,
+        'medium': DIFFICULTY_MEDIUM,
+        'hard': DIFFICULTY_HARD
+    }.get(difficulty.lower(), DIFFICULTY_MEDIUM)
+    
+    # Calculate target number of initial cells based on difficulty
+    target_cells = int(board_size * board_size * random.uniform(
+        difficulty_settings['min_fill'],
+        difficulty_settings['max_fill']
+    ))
     placed_cells = 0
     
     # Try to place symbols
@@ -155,8 +194,8 @@ def generate_puzzle():
     max_attempts = 1000
     
     while placed_cells < target_cells and attempts < max_attempts:
-        row = random.randint(0, BOARD_SIZE - 1)
-        col = random.randint(0, BOARD_SIZE - 1)
+        row = random.randint(0, board_size - 1)
+        col = random.randint(0, board_size - 1)
         
         if board[row][col] == '':
             symbol = random.choice(['sun', 'moon'])
@@ -171,14 +210,17 @@ def generate_puzzle():
 
 @app.route('/')
 def index():
-    return render_template('index.html', board_size=BOARD_SIZE)
+    return render_template('index.html', board_size=DIFFICULTY_MEDIUM['size'])
 
 @app.route('/api/new-game', methods=['GET'])
 def new_game():
-    board, initial_board = generate_puzzle()
+    difficulty = request.args.get('difficulty', 'medium')
+    board, initial_board = generate_puzzle(difficulty)
     return jsonify({
         'board': board,
-        'initial_board': initial_board
+        'initial_board': initial_board,
+        'difficulty': difficulty,
+        'size': get_board_size(difficulty)
     })
 
 @app.route('/api/check', methods=['POST'])
@@ -216,8 +258,8 @@ def check_board_state(board, initial_board):
     errors = []
     
     # Check each cell
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
+    for row in range(get_board_size()):
+        for col in range(get_board_size()):
             # Skip initial cells
             if initial_board[row][col] != '':
                 continue
@@ -230,10 +272,10 @@ def check_board_state(board, initial_board):
             if col >= 2:
                 if board[row][col-1] == cell and board[row][col-2] == cell:
                     errors.append((row, col, "Three identical symbols in a row"))
-            if col <= BOARD_SIZE-3:
+            if col <= get_board_size()-3:
                 if board[row][col+1] == cell and board[row][col+2] == cell:
                     errors.append((row, col, "Three identical symbols in a row"))
-            if 0 < col < BOARD_SIZE-1:
+            if 0 < col < get_board_size()-1:
                 if board[row][col-1] == cell and board[row][col+1] == cell:
                     errors.append((row, col, "Three identical symbols in a row"))
             
@@ -241,34 +283,34 @@ def check_board_state(board, initial_board):
             if row >= 2:
                 if board[row-1][col] == cell and board[row-2][col] == cell:
                     errors.append((row, col, "Three identical symbols in a column"))
-            if row <= BOARD_SIZE-3:
+            if row <= get_board_size()-3:
                 if board[row+1][col] == cell and board[row+2][col] == cell:
                     errors.append((row, col, "Three identical symbols in a column"))
-            if 0 < row < BOARD_SIZE-1:
+            if 0 < row < get_board_size()-1:
                 if board[row-1][col] == cell and board[row+1][col] == cell:
                     errors.append((row, col, "Three identical symbols in a column"))
     
     # Check row and column counts
-    for i in range(BOARD_SIZE):
+    for i in range(get_board_size()):
         # Check row counts
         suns_in_row = count_symbols_in_row(board, i, 'sun')
         moons_in_row = count_symbols_in_row(board, i, 'moon')
-        if suns_in_row > BOARD_SIZE//2:
+        if suns_in_row > get_board_size()//2:
             errors.append((i, 0, f"Too many suns in row {i+1}"))
-        if moons_in_row > BOARD_SIZE//2:
+        if moons_in_row > get_board_size()//2:
             errors.append((i, 0, f"Too many moons in row {i+1}"))
         
         # Check column counts
         suns_in_col = count_symbols_in_col(board, i, 'sun')
         moons_in_col = count_symbols_in_col(board, i, 'moon')
-        if suns_in_col > BOARD_SIZE//2:
+        if suns_in_col > get_board_size()//2:
             errors.append((0, i, f"Too many suns in column {i+1}"))
-        if moons_in_col > BOARD_SIZE//2:
+        if moons_in_col > get_board_size()//2:
             errors.append((0, i, f"Too many moons in column {i+1}"))
     
     # Check for duplicate rows
     filled_rows = []
-    for row in range(BOARD_SIZE):
+    for row in range(get_board_size()):
         if '' not in board[row]:  # Only check complete rows
             row_tuple = tuple(board[row])
             if row_tuple in filled_rows:
@@ -277,8 +319,8 @@ def check_board_state(board, initial_board):
     
     # Check for duplicate columns
     filled_cols = []
-    for col in range(BOARD_SIZE):
-        col_values = [board[row][col] for row in range(BOARD_SIZE)]
+    for col in range(get_board_size()):
+        col_values = [board[row][col] for row in range(get_board_size())]
         if '' not in col_values:  # Only check complete columns
             col_tuple = tuple(col_values)
             if col_tuple in filled_cols:
@@ -297,8 +339,8 @@ def find_help_solution(board, initial_board):
         }
     
     # If no errors, find a cell that can be solved
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
+    for row in range(get_board_size()):
+        for col in range(get_board_size()):
             if initial_board[row][col] != '' or board[row][col] != '':
                 continue  # Skip initial and filled cells
             

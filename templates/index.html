@@ -11,9 +11,56 @@
     <div class="container">
         <h1>Tango Puzzle</h1>
         <div class="game-controls">
-            <button id="new-game-btn">New Game</button>
-            <button id="check-btn">Check</button>
-            <button id="help-btn">Help</button>
+            <!-- Primary Controls -->
+            <div class="primary-controls">
+                <div class="difficulty-selector">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="game-stats">
+                    <div class="timer">
+                        <span class="timer-label">Time:</span>
+                        <span id="timer">00:00</span>
+                    </div>
+                    <div class="progress">
+                        <span class="progress-label">Progress:</span>
+                        <span id="progress">0%</span>
+                    </div>
+                    <div class="score">
+                        <span class="score-label">Score:</span>
+                        <span id="score">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Actions -->
+            <div class="game-actions">
+                <div class="action-group primary">
+                    <button id="new-game-btn" class="primary-action">New Game</button>
+                    <button id="check-btn" class="primary-action">Check</button>
+                    <button id="help-btn" class="primary-action">Help</button>
+                    <button id="tutorial-btn" class="primary-action">Tutorial</button>
+                </div>
+                <div class="action-group secondary">
+                    <button id="undo-btn" title="Undo last move" disabled>↩️</button>
+                    <button id="redo-btn" title="Redo last undone move" disabled>↪️</button>
+                    <button id="reset-btn" title="Reset to initial state">🔄</button>
+                    <button id="save-btn" title="Save current game">💾</button>
+                    <button id="load-btn" title="Load saved game">📂</button>
+                </div>
+                <div class="action-group features">
+                    <button id="stats-btn" title="Statistics">📊</button>
+                    <button id="achievements-btn" title="Achievements">🏆</button>
+                    <button id="sound-btn" title="Sound Settings">🔊</button>
+                    <button id="theme-btn" title="Theme Settings">🎨</button>
+                    <button id="multiplayer-btn" title="Multiplayer">👥</button>
+                    <button id="daily-btn" title="Daily Challenge">📅</button>
+                </div>
+            </div>
         </div>
         <div class="game-board-container">
             <!-- Column helpers -->
@@ -54,6 +101,658 @@
             </ul>
         </div>
     </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tutorial</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tutorial-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">Step <span id="current-step">1</span> of <span id="total-steps">5</span></div>
+                </div>
+                <div class="tutorial-steps">
+                    <div class="tutorial-step active" data-step="1">
+                        <h3>Welcome to Tango Puzzle!</h3>
+                        <p>This tutorial will guide you through the basic rules and strategies of the game.</p>
+                        <div class="tutorial-controls">
+                            <button class="next-step">Next</button>
+                        </div>
+                    </div>
+                    <div class="tutorial-step" data-step="2">
+                        <h3>Basic Rules</h3>
+                        <ul>
+                            <li>No more than two identical symbols can be adjacent (horizontally or vertically)</li>
+                            <li>Each row and column must have an equal number of suns and moons</li>
+                            <li>No row or column can be identical to another</li>
+                        </ul>
+                        <div class="tutorial-controls">
+                            <button class="prev-step">Previous</button>
+                            <button class="next-step">Next</button>
+                        </div>
+                    </div>
+                    <div class="tutorial-step" data-step="3">
+                        <h3>Game Controls</h3>
+                        <ul>
+                            <li><strong>New Game:</strong> Start a new puzzle</li>
+                            <li><strong>Check:</strong> Verify your current progress</li>
+                            <li><strong>Help:</strong> Get hints for the next move</li>
+                            <li><strong>Tutorial:</strong> Show this tutorial again</li>
+                        </ul>
+                        <div class="tutorial-controls">
+                            <button class="prev-step">Previous</button>
+                            <button class="next-step">Next</button>
+                        </div>
+                    </div>
+                    <div class="tutorial-step" data-step="4">
+                        <h3>Tips & Strategies</h3>
+                        <ul>
+                            <li>Look for rows or columns that are almost complete</li>
+                            <li>Use the helper numbers to track sun and moon counts</li>
+                            <li>Watch out for patterns that would create three in a row</li>
+                            <li>Take your time and think ahead!</li>
+                        </ul>
+                        <div class="tutorial-controls">
+                            <button class="prev-step">Previous</button>
+                            <button class="next-step">Next</button>
+                        </div>
+                    </div>
+                    <div class="tutorial-step" data-step="5">
+                        <h3>Practice Puzzle</h3>
+                        <p>Let's try a simple puzzle to practice what you've learned!</p>
+                        <div class="practice-puzzle">
+                            <!-- Practice puzzle board will be generated here -->
+                        </div>
+                        <div class="tutorial-controls">
+                            <button class="prev-step">Previous</button>
+                            <button class="start-game">Start Playing!</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Help & Hints</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>Current Errors</h3>
+                    <div id="error-list"></div>
+                </div>
+                <div class="help-section">
+                    <h3>Suggested Moves</h3>
+                    <div id="suggestion-list"></div>
+                </div>
+                <div class="help-section">
+                    <h3>Strategy Tips</h3>
+                    <div id="strategy-tips"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Game Modal -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Save Game</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="save-form">
+                    <div class="form-group">
+                        <label for="save-name">Save Name:</label>
+                        <input type="text" id="save-name" placeholder="Enter a name for your save">
+                    </div>
+                    <div class="save-info">
+                        <p>Difficulty: <span id="save-difficulty"></span></p>
+                        <p>Time: <span id="save-time"></span></p>
+                        <p>Progress: <span id="save-progress"></span></p>
+                    </div>
+                    <div class="saved-games">
+                        <h3>Saved Games</h3>
+                        <div id="saved-games-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Game Modal -->
+    <div id="load-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Load Game</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="load-form">
+                    <div id="load-games-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Game Statistics</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-section">
+                    <h3>Overall Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Games Played</span>
+                            <span class="stat-value" id="total-games">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Games Won</span>
+                            <span class="stat-value" id="games-won">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Success Rate</span>
+                            <span class="stat-value" id="success-rate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Hints Used</span>
+                            <span class="stat-value" id="total-hints">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h3>Best Times</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Easy</span>
+                            <span class="stat-value" id="best-time-easy">--:--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Medium</span>
+                            <span class="stat-value" id="best-time-medium">--:--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Hard</span>
+                            <span class="stat-value" id="best-time-hard">--:--</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h3>Current Streak</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Winning Streak</span>
+                            <span class="stat-value" id="current-streak">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Best Streak</span>
+                            <span class="stat-value" id="best-streak">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Achievements</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="achievements-grid" id="achievements-list">
+                    <!-- Achievements will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Settings Modal -->
+    <div id="sound-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Sound Settings</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sound-settings">
+                    <div class="sound-setting">
+                        <div class="sound-setting-header">
+                            <span class="sound-label">Master Volume</span>
+                            <button id="master-mute" class="mute-btn" title="Toggle mute">🔊</button>
+                        </div>
+                        <input type="range" id="master-volume" min="0" max="100" value="100" class="volume-slider">
+                    </div>
+                    <div class="sound-setting">
+                        <div class="sound-setting-header">
+                            <span class="sound-label">Music Volume</span>
+                            <button id="music-mute" class="mute-btn" title="Toggle music">🎵</button>
+                        </div>
+                        <input type="range" id="music-volume" min="0" max="100" value="80" class="volume-slider">
+                    </div>
+                    <div class="sound-setting">
+                        <div class="sound-setting-header">
+                            <span class="sound-label">Effects Volume</span>
+                            <button id="effects-mute" class="mute-btn" title="Toggle effects">🎮</button>
+                        </div>
+                        <input type="range" id="effects-volume" min="0" max="100" value="100" class="volume-slider">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Settings Modal -->
+    <div id="theme-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Theme Settings</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-settings">
+                    <div class="theme-section">
+                        <h3>Color Mode</h3>
+                        <div class="theme-option">
+                            <label class="theme-switch">
+                                <input type="checkbox" id="dark-mode-toggle">
+                                <span class="slider round"></span>
+                                <span class="theme-label">Dark Mode</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3>Color Theme</h3>
+                        <div class="color-themes">
+                            <div class="color-theme" data-theme="default">
+                                <div class="theme-preview default-theme"></div>
+                                <span>Default</span>
+                            </div>
+                            <div class="color-theme" data-theme="ocean">
+                                <div class="theme-preview ocean-theme"></div>
+                                <span>Ocean</span>
+                            </div>
+                            <div class="color-theme" data-theme="forest">
+                                <div class="theme-preview forest-theme"></div>
+                                <span>Forest</span>
+                            </div>
+                            <div class="color-theme" data-theme="sunset">
+                                <div class="theme-preview sunset-theme"></div>
+                                <span>Sunset</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3>Symbol Style</h3>
+                        <div class="symbol-styles">
+                            <div class="symbol-style" data-style="default">
+                                <div class="symbol-preview">
+                                    <span class="sun">☀️</span>
+                                    <span class="moon">🌙</span>
+                                </div>
+                                <span>Default</span>
+                            </div>
+                            <div class="symbol-style" data-style="minimal">
+                                <div class="symbol-preview">
+                                    <span class="sun">●</span>
+                                    <span class="moon">○</span>
+                                </div>
+                                <span>Minimal</span>
+                            </div>
+                            <div class="symbol-style" data-style="modern">
+                                <div class="symbol-preview">
+                                    <span class="sun">★</span>
+                                    <span class="moon">☆</span>
+                                </div>
+                                <span>Modern</span>
+                            </div>
+                            <div class="symbol-style" data-style="nature">
+                                <div class="symbol-preview">
+                                    <span class="sun">🌻</span>
+                                    <span class="moon">🌸</span>
+                                </div>
+                                <span>Nature</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3>Board Style</h3>
+                        <div class="board-styles">
+                            <div class="board-style" data-style="default">
+                                <div class="board-preview default-board"></div>
+                                <span>Default</span>
+                            </div>
+                            <div class="board-style" data-style="rounded">
+                                <div class="board-preview rounded-board"></div>
+                                <span>Rounded</span>
+                            </div>
+                            <div class="board-style" data-style="minimal">
+                                <div class="board-preview minimal-board"></div>
+                                <span>Minimal</span>
+                            </div>
+                            <div class="board-style" data-style="bordered">
+                                <div class="board-preview bordered-board"></div>
+                                <span>Bordered</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-section">
+                        <h3>Font Style</h3>
+                        <div class="font-styles">
+                            <select id="font-family">
+                                <option value="Poppins">Poppins</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Open Sans">Open Sans</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Lato">Lato</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multiplayer Modal -->
+    <div id="multiplayer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Multiplayer</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="multiplayer-sections">
+                    <!-- Player Profile Section -->
+                    <div class="multiplayer-section">
+                        <h3>Player Profile</h3>
+                        <div class="player-profile">
+                            <div class="profile-header">
+                                <div class="profile-avatar">
+                                    <img id="player-avatar" src="{{ url_for('static', filename='images/default-avatar.png') }}" alt="Player Avatar">
+                                    <button id="change-avatar" class="icon-button">📷</button>
+                                </div>
+                                <div class="profile-info">
+                                    <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                                    <div class="player-stats">
+                                        <span class="stat">Rank: <span id="player-rank">-</span></span>
+                                        <span class="stat">Wins: <span id="player-wins">0</span></span>
+                                        <span class="stat">Rating: <span id="player-rating">1000</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Rooms Section -->
+                    <div class="multiplayer-section">
+                        <h3>Game Rooms</h3>
+                        <div class="room-controls">
+                            <button id="create-room-btn" class="primary-button">Create Room</button>
+                            <button id="refresh-rooms-btn" class="secondary-button">Refresh</button>
+                        </div>
+                        <div class="rooms-list" id="rooms-list">
+                            <!-- Rooms will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Active Games Section -->
+                    <div class="multiplayer-section">
+                        <h3>Active Games</h3>
+                        <div class="active-games" id="active-games">
+                            <!-- Active games will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Section -->
+                    <div class="multiplayer-section">
+                        <h3>Leaderboard</h3>
+                        <div class="leaderboard-tabs">
+                            <button class="tab-button active" data-tab="global">Global</button>
+                            <button class="tab-button" data-tab="friends">Friends</button>
+                        </div>
+                        <div class="leaderboard-content">
+                            <div class="tab-content active" id="global-leaderboard">
+                                <!-- Global leaderboard will be populated by JavaScript -->
+                            </div>
+                            <div class="tab-content" id="friends-leaderboard">
+                                <!-- Friends leaderboard will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Room Modal -->
+    <div id="create-room-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Game Room</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="create-room-form">
+                    <div class="form-group">
+                        <label for="room-name">Room Name:</label>
+                        <input type="text" id="room-name" placeholder="Enter room name" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="room-difficulty">Difficulty:</label>
+                        <select id="room-difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-type">Game Type:</label>
+                        <select id="room-type">
+                            <option value="competitive">Competitive</option>
+                            <option value="collaborative">Collaborative</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-privacy">Privacy:</label>
+                        <select id="room-privacy">
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="room-password-group" style="display: none;">
+                        <label for="room-password">Password:</label>
+                        <input type="password" id="room-password" placeholder="Enter room password">
+                    </div>
+                    <div class="form-actions">
+                        <button id="create-room-submit" class="primary-button">Create Room</button>
+                        <button class="secondary-button close-modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Room Modal -->
+    <div id="game-room-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Game Room: <span id="room-name-display"></span></h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="room-info">
+                    <div class="room-details">
+                        <p>Difficulty: <span id="room-difficulty-display"></span></p>
+                        <p>Game Type: <span id="room-type-display"></span></p>
+                        <p>Status: <span id="room-status"></span></p>
+                    </div>
+                    <div class="room-players">
+                        <h3>Players</h3>
+                        <div class="players-list" id="room-players-list">
+                            <!-- Players will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="room-chat">
+                        <h3>Chat</h3>
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- Chat messages will be populated by JavaScript -->
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="chat-input" placeholder="Type a message...">
+                            <button id="send-message">Send</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="room-actions">
+                    <button id="start-game-btn" class="primary-button" disabled>Start Game</button>
+                    <button id="leave-room-btn" class="secondary-button">Leave Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Upload Modal -->
+    <div id="avatar-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Avatar</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-upload">
+                    <div class="avatar-preview">
+                        <img id="avatar-preview" src="{{ url_for('static', filename='images/default-avatar.png') }}" alt="Avatar Preview">
+                    </div>
+                    <div class="avatar-options">
+                        <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                        <button id="upload-avatar" class="primary-button">Upload Image</button>
+                        <div class="avatar-presets">
+                            <h4>Preset Avatars</h4>
+                            <div class="preset-avatars" id="preset-avatars">
+                                <!-- Preset avatars will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Challenge Modal -->
+    <div id="daily-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Daily Challenge</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="daily-challenge">
+                    <div class="challenge-header">
+                        <div class="challenge-info">
+                            <h3>Today's Challenge</h3>
+                            <p class="challenge-date" id="challenge-date"></p>
+                            <div class="challenge-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Difficulty:</span>
+                                    <span class="stat-value" id="challenge-difficulty"></span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Time Limit:</span>
+                                    <span class="stat-value" id="challenge-time-limit"></span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Your Best:</span>
+                                    <span class="stat-value" id="challenge-best-time">--:--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="challenge-streak">
+                            <div class="streak-info">
+                                <span class="streak-count" id="streak-count">0</span>
+                                <span class="streak-label">Day Streak</span>
+                            </div>
+                            <div class="streak-calendar" id="streak-calendar">
+                                <!-- Calendar will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="challenge-leaderboard">
+                        <h3>Today's Leaderboard</h3>
+                        <div class="leaderboard-tabs">
+                            <button class="tab-button active" data-tab="global">Global</button>
+                            <button class="tab-button" data-tab="friends">Friends</button>
+                        </div>
+                        <div class="leaderboard-content">
+                            <div class="tab-content active" id="daily-global-leaderboard">
+                                <!-- Global leaderboard will be populated by JavaScript -->
+                            </div>
+                            <div class="tab-content" id="daily-friends-leaderboard">
+                                <!-- Friends leaderboard will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="challenge-history">
+                        <h3>Challenge History</h3>
+                        <div class="history-list" id="challenge-history">
+                            <!-- History will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="challenge-rewards">
+                        <h3>Daily Rewards</h3>
+                        <div class="rewards-grid" id="daily-rewards">
+                            <!-- Rewards will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="bgm" loop>
+        <source src="{{ url_for('static', filename='sounds/background.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="sun-sound">
+        <source src="{{ url_for('static', filename='sounds/sun.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="moon-sound">
+        <source src="{{ url_for('static', filename='sounds/moon.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="error-sound">
+        <source src="{{ url_for('static', filename='sounds/error.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="success-sound">
+        <source src="{{ url_for('static', filename='sounds/success.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="achievement-sound">
+        <source src="{{ url_for('static', filename='sounds/achievement.mp3') }}" type="audio/mpeg">
+    </audio>
+    <audio id="click-sound">
+        <source src="{{ url_for('static', filename='sounds/click.mp3') }}" type="audio/mpeg">
+    </audio>
+
     <script src="{{ url_for('static', filename='game.js') }}"></script>
 </body>
 </html> 
